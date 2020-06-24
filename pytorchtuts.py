@@ -37,4 +37,39 @@ class Net(nn.Module):
 net = Net()
 X = torch.rand((28,28))
 X = X.view(1, 28*28)
-print(net(X))
+#print(net(X))
+import torch.optim as optim
+
+# Adam optimizer - takes in first var for everything that's adjustable in the model
+optimizer = optim.Adam(net.parameters(), lr=0.001)
+
+EPOCHS = 3
+# loop epoch over dataset
+for epoch in range(EPOCHS):
+    for data in trainset:
+        # data is bactch of feature sets and labels
+        X, Y = data
+        net.zero_grad() # zero a gradient as to not accumulate previous loss'
+        output = net(X.view(-1, 28*28))
+        loss = F.nll_loss(output, Y) # show the loss (how accurate it was)
+        loss.backward()
+        optimizer.step()
+
+correct = 0
+total = 0
+
+with torch.no_grad():
+    for data in trainset:
+        X, Y = data
+        output = net(X.view(-1, 28*28))
+        for idx, i in enumerate(output):
+            if torch.argmax(i) == Y[idx]:
+                correct += 1
+            total += 1
+
+import matplotlib.pyplot as plt
+plt.imshow(X[0].view(28,28))
+plt.show()
+
+#print("Accuracy: ", round(correct/total, 3))
+print(torch.argmax(net(X[0].view(-1,28*28))[0]))
