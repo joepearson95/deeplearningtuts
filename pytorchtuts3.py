@@ -98,7 +98,7 @@ class CNN(nn.Module):
                                  batch_size=self.batch_size, shuffle=True,
                                  num_workers=8) # num_workers = threads
         mnist_test_data = MNIST('mnist', train=False, download=True, transform=ToTensor())
-        self.train_data_loader = T.utils.data.DataLoader(mnist_test_data,
+        self.test_data_loader = T.utils.data.DataLoader(mnist_test_data,
                                  batch_size=self.batch_size, shuffle=True,
                                  num_workers=8)
 
@@ -132,7 +132,8 @@ class CNN(nn.Module):
             self.loss_history.append(ep_loss)
 
     def _test(self):
-        self.test()
+        self.eval()
+
         ep_loss = 0
         ep_acc = []
         # enumerate data
@@ -142,7 +143,7 @@ class CNN(nn.Module):
             loss = self.loss(prediction, label) # loss for deep NN
             # to observe network
             prediction = F.softmax(prediction, dim=1) # actual prediction of the class.
-            classes = T.argmax(prediciton, dim=1)
+            classes = T.argmax(prediction, dim=1)
             # where wrongly classified, make it 1. else, 0
             wrong = T.where(classes != label,
                             T.tensor([1.]).to(self.device),
@@ -150,13 +151,15 @@ class CNN(nn.Module):
             acc = 1 - T.sum(wrong) / self.batch_size
             ep_acc.append(acc.item()) # .item gets the value, not the obj tensor
             ep_loss += loss.item()
-        print('Finish epoch ', i, 'total loss %.3f' % ep_loss, 'accuracy %.3f' % np.mean(ep_acc))
+        print('total loss %.3f' % ep_loss, 'accuracy %.3f' % np.mean(ep_acc))
 
 if __name__ == '__main__':
-    net = CNN(lr=0.001, batch_size=128, epochs=25)
+    net = CNN(lr=0.001, batch_size=128, epochs=4)
     net._train()
 
-    plt.plot(net.loss_history)
-    plt.show()
-    plt.plot(net.acc_history)
-    plt.show()
+    #plt.plot(net.loss_history)
+    #plt.show()
+    #plt.plot(net.acc_history)
+    #plt.show()
+
+    net._test()
