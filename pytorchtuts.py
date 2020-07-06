@@ -72,4 +72,4 @@ plt.imshow(X[0].view(28,28))
 plt.show()
 
 #print("Accuracy: ", round(correct/total, 3))
-print(torch.argmax(net(X[0].view(-1,28*28))[0]))
+print(torch.argmax(net(X[0].view(-1,28*28))[0])) # print the argument max based off the given parameters (the image supplied and the computers idea)
