@@ -35,14 +35,16 @@ class CNN(nn.Module):
 
         input_dims = self.calc_input_dims() # automated dimension calculation saves having to do the maths
 
-        self.fc1 = nn.Linear(input_dims, self.num_classes)
-        self.optimizer = optim.Adam(self.parameters(), lr=self.lr)
-        self.loss = nn.CrossEntropyLoss()
+        self.fc1 = nn.Linear(input_dims, self.num_classes) # takes cnn output, pass through lin layer and calculate prob of classes
+        self.optimizer = optim.Adam(self.parameters(), lr=self.lr) # how network actually learns
+        self.loss = nn.CrossEntropyLoss() # for multi classes, use CEL. Loss = 0 would be perfect. CSE measures between 0 and 1
         self.to(self.device)
         self.get_data()
 
+    # begin calculating the dimensions
     def calc_input_dims(self):
-        batch_data = T.zeros((1, 1, 28, 28)) #instead of hardwiring batch size, it is 1
+        batch_data = T.zeros((1, 1, 28, 28)) #instead of hardwiring batch size, it is 1. 1*1, 28*28 of zeros tensor. for dimensions
+        # below is passing the above tensor through the network to find the dimension. makes comp do the hard work
         batch_data = self.conv1(batch_data)
         #batch_data = self.bn1(batch_data)
         batch_data = self.conv2(batch_data)
@@ -56,13 +58,14 @@ class CNN(nn.Module):
 
         return int(np.prod(batch_data.size()))
 
+    # begin forward pass of data through the network
     def forward(self, batch_data):
         batch_data = T.tensor(batch_data).to(self.device)
 
         #feed forwards
         batch_data = self.conv1(batch_data)
         batch_data = self.bn1(batch_data) # before or after relu can effect the results when more complex
-        batch_data = F.relu(batch_data)
+        batch_data = F.relu(batch_data) # activation function ReLu. Good general default option
 
         batch_data = self.conv2(batch_data)
         batch_data = self.bn2(batch_data)
@@ -89,7 +92,7 @@ class CNN(nn.Module):
         batch_data = self.maxpool2(batch_data)
         batch_data = batch_data.view(batch_data.size()[0], -1) # flatten on 0th element
 
-        classes = self.fc1(batch_data)
+        classes = self.fc1(batch_data) # gather classifications
         return classes
 
     def get_data(self):
@@ -109,27 +112,33 @@ class CNN(nn.Module):
             ep_acc = []
             # enumerate data
             for j, (input, label) in enumerate(self.train_data_loader):
-                # accumulates from training step. This can cause issues. Thus, zero gradient at each train step
+                # accumulates from training step to step. This can cause bad performance. Thus, zero gradient at each train step
                 self.optimizer.zero_grad()
+
+                # book keeping so to speak
                 label = label.to(self.device)
-                prediction = self.forward(input) # feedforward pass for this iterations input
-                loss = self.loss(prediction, label) # loss for deep NN
+                prediction = self.forward(input) # feedforward pass for this iterations input and is the prediction
+                loss = self.loss(prediction, label) # loss for this iteration  based on CEL from earlier
+
                 # to observe network
                 prediction = F.softmax(prediction, dim=1) # actual prediction of the class.
-                classes = T.argmax(prediction, dim=1)
+                classes = T.argmax(prediction, dim=1) # argument that gives max value
+
                 # where wrongly classified, make it 1. else, 0
                 wrong = T.where(classes != label,
                                 T.tensor([1.]).to(self.device),
                                 T.tensor([0.]).to(self.device))
-                acc = 1 - T.sum(wrong) / self.batch_size
+
+                acc = 1 - T.sum(wrong) / self.batch_size # scale accuracy by batch size
                 ep_acc.append(acc.item()) # .item gets the value, not the obj tensor
                 self.acc_history.append(acc.item())
                 ep_loss += loss.item()
-                # this is required, otherwise no learning is done
-                loss.backward()
-                self.optimizer.step()
+
+                # this is required in SUPERVISED learning, otherwise no learning is done
+                loss.backward() # backpropogate to accumulate gradient
+                self.optimizer.step() # param update based on current gradient (within .grad)
             print('Finish epoch ', i, 'total loss %.3f' % ep_loss, 'accuracy %.3f' % np.mean(ep_acc))
-            self.loss_history.append(ep_loss)
+            self.loss_history.append(ep_loss) 
 
     def _test(self):
         self.eval()
@@ -154,7 +163,7 @@ class CNN(nn.Module):
         print('total loss %.3f' % ep_loss, 'accuracy %.3f' % np.mean(ep_acc))
 
 if __name__ == '__main__':
-    net = CNN(lr=0.001, batch_size=128, epochs=4)
+    net = CNN(lr=0.001, batch_size=128, epochs=2)
     net._train()
 
     #plt.plot(net.loss_history)
