@@ -138,7 +138,7 @@ class CNN(nn.Module):
                 loss.backward() # backpropogate to accumulate gradient
                 self.optimizer.step() # param update based on current gradient (within .grad)
             print('Finish epoch ', i, 'total loss %.3f' % ep_loss, 'accuracy %.3f' % np.mean(ep_acc))
-            self.loss_history.append(ep_loss) 
+            self.loss_history.append(ep_loss)
 
     def _test(self):
         self.eval()
