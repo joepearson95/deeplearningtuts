@@ -166,9 +166,9 @@ if __name__ == '__main__':
     net = CNN(lr=0.001, batch_size=128, epochs=2)
     net._train()
 
-    #plt.plot(net.loss_history)
-    #plt.show()
-    #plt.plot(net.acc_history)
-    #plt.show()
+    plt.plot(net.loss_history)
+    plt.show()
+    plt.plot(net.acc_history)
+    plt.show()
 
     net._test()
