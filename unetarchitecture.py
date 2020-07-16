@@ -13,6 +13,7 @@ def double_conv(in_c, out_c):
     )
     return conv
 
+
 def crop_img(tensor, target_tensor):
     # square images size
     target_size = target_tensor.size()[2]
